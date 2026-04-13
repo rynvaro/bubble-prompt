@@ -9,10 +9,11 @@ import (
 // can be embedded in a larger application model.
 type Model struct {
 	// ---- configuration (set via options) ----
-	prefix        string
-	dynamicPrefix func() string
-	placeholder   string
-	styles        Styles
+	prefix             string
+	dynamicPrefix      func() string
+	placeholder        string
+	styles             Styles
+	completionPosition CompletionPosition
 
 	// ---- internal components ----
 	textInput  textInput
@@ -307,7 +308,20 @@ func (m Model) View() string {
 	promptLine := prefixRendered + inputDisplay
 
 	if m.completion.IsVisible() {
-		indent := lipgloss.Width(prefixRendered)
+		var indent int
+		switch m.completionPosition {
+		case CompletionAtCursor:
+			// Align popup under the cursor: prefix width + visible chars before cursor.
+			// When the line wraps we take % terminalWidth so the popup stays on screen.
+			total := lipgloss.Width(prefixRendered) + lipgloss.Width(m.textInput.TextBeforeCursor())
+			if m.width > 0 {
+				indent = total % m.width
+			} else {
+				indent = total
+			}
+		default: // CompletionAtPrefix
+			indent = lipgloss.Width(prefixRendered)
+		}
 		popup := lipgloss.NewStyle().MarginLeft(indent).Render(m.completion.View())
 		return promptLine + "\n" + popup
 	}

@@ -158,7 +158,36 @@ func completer(d prompt.Document) []prompt.Suggestion {
 }
 ```
 
-### 4.3 分隔符感知（不替换整行，只替换当前词）
+### 4.3 Flag 补全（`--xxx` 参数）
+
+Flag 和子命令在框架层面没有区别，都是普通的 `Suggestion`。在 Completer 里用 `strings.HasPrefix(word, "-")` 检测当前词是否以 `-` 开头来决定是否提供 flag 列表：
+
+```go
+var getFlags = []prompt.Suggestion{
+    {Text: "--namespace", Display: "--namespace", Description: "-n  指定命名空间"},
+    {Text: "--output",    Display: "--output",    Description: "-o  输出格式 (json|yaml|wide)"},
+    {Text: "--watch",     Display: "--watch",     Description: "-w  持续监听变化"},
+}
+
+func completer(d prompt.Document) []prompt.Suggestion {
+    word := d.CurrentWord()
+    args := strings.Fields(d.TextBeforeCursor())
+
+    // 当前正在输入 flag
+    if strings.HasPrefix(word, "-") {
+        return prompt.FilterHasPrefix(getFlags, word, true)
+    }
+    // 刚输完资源名，还没输下一个词，自动提示 flag
+    atBoundary := strings.HasSuffix(d.TextBeforeCursor(), " ")
+    if atBoundary && len(args) >= 3 {
+        return getFlags
+    }
+    // ... 其余多级逻辑
+    return nil
+}
+```
+
+### 4.4 分隔符感知（不替换整行，只替换当前词）
 
 Completer 接受当前词，`prompt.New` 内部的 `acceptCompletion` 会自动只替换光标左侧的当前词，不影响已输入的其他内容。
 
@@ -181,6 +210,7 @@ p := prompt.New(executor, completer,
     prompt.WithHistory([]string{"get pod", "set config"}),
     prompt.WithMaxSuggestions(10),
     prompt.WithStyles(myStyles),
+    prompt.WithCompletionPosition(prompt.CompletionAtCursor),
 )
 ```
 
@@ -192,6 +222,26 @@ p := prompt.New(executor, completer,
 | `WithHistory(entries)` | 预填充历史记录 | `nil` |
 | `WithMaxSuggestions(n)` | 弹窗最多显示几条（超出显示滚动条）| `8` |
 | `WithStyles(s)` | 完整替换样式 | `DefaultStyles()` |
+| `WithCompletionPosition(p)` | 弹窗水平位置，见下表 | `CompletionAtPrefix` |
+
+### 5.1 弹窗位置
+
+`CompletionPosition` 控制补全弹窗的水平对齐：
+
+| 常量 | 效果 |
+|------|------|
+| `CompletionAtPrefix`（默认）| 弹窗固定对齐输入起点（prefix 末尾），位置不随输入变化 |
+| `CompletionAtCursor` | 弹窗跟随光标，始终出现在当前正在输入的字符正下方 |
+
+```go
+// 跟随光标（推荐用于多级子命令/flags 场景）
+prompt.WithCompletionPosition(prompt.CompletionAtCursor)
+
+// 固定位置（默认，适合 prefix 较短的场景）
+prompt.WithCompletionPosition(prompt.CompletionAtPrefix)
+```
+
+当输入行较长导致终端换行时，框架会自动对弹窗缩进取模（`% terminalWidth`），保证弹窗始终可见。
 
 ---
 

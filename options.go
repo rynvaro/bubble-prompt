@@ -1,5 +1,18 @@
 package prompt
 
+// CompletionPosition controls where the completion popup appears horizontally.
+type CompletionPosition int
+
+const (
+	// CompletionAtPrefix aligns the popup with the start of the input area
+	// (i.e. right after the prefix string). This is the default.
+	CompletionAtPrefix CompletionPosition = iota
+
+	// CompletionAtCursor makes the popup follow the cursor position so it
+	// always appears directly below the character being typed.
+	CompletionAtCursor
+)
+
 // Option is a functional option for configuring a Prompt.
 type Option func(*Model)
 
@@ -46,5 +59,15 @@ func WithStyles(s Styles) Option {
 	return func(m *Model) {
 		m.styles = s
 		m.completion.styles = s
+	}
+}
+
+// WithCompletionPosition sets where the completion popup appears horizontally.
+//
+//	prompt.WithCompletionPosition(prompt.CompletionAtCursor)  // follow the cursor
+//	prompt.WithCompletionPosition(prompt.CompletionAtPrefix)  // fixed at input start (default)
+func WithCompletionPosition(p CompletionPosition) Option {
+	return func(m *Model) {
+		m.completionPosition = p
 	}
 }
