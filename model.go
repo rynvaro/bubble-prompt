@@ -29,9 +29,9 @@ type Model struct {
 	// tabActive is false whenever the popup is driven by normal typing;
 	// it becomes true only after the user explicitly presses Tab, ensuring
 	// tabSavedWord/tabSavedCursor are always valid when applyCompletion runs.
-	tabActive       bool
-	tabSavedWord    string
-	tabSavedCursor  int
+	tabActive      bool
+	tabSavedWord   string
+	tabSavedCursor int
 
 	// submitted / quitting flags are read by Prompt.Run() after prog.Run().
 	lastInput string
