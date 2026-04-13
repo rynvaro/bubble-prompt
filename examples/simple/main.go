@@ -34,6 +34,7 @@ func executor(input string) error {
 	switch args[0] {
 	case "exit", "quit":
 		fmt.Println("Goodbye!")
+		return prompt.ErrExit
 	default:
 		fmt.Printf("▶ kubectl %s\n", input)
 	}

@@ -25,6 +25,10 @@ type Model struct {
 	// ---- runtime state ----
 	width int
 
+	// tab completion undo state — saved when the popup first opens
+	tabSavedWord   string
+	tabSavedCursor int
+
 	// submitted / quitting flags are read by Prompt.Run() after prog.Run().
 	lastInput string
 	submitted bool
@@ -71,30 +75,42 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	// ---- submit / accept ----------------------------------------------------
 	case "enter":
-		if m.completion.IsVisible() {
-			m.acceptCompletion()
-		} else {
-			return m.submit()
-		}
-		return m, nil
+		// Popup may be open with text already applied by Tab — just close it
+		// and submit whatever is currently in the input.
+		m.completion.Close()
+		return m.submit()
 
 	// ---- completion ---------------------------------------------------------
 	case "tab":
-		if m.completion.IsVisible() {
-			m.completion.Next()
-		} else {
+		if !m.completion.IsVisible() {
+			// First Tab: open popup, immediately apply first item.
 			m.refreshCompletion()
+			if m.completion.IsVisible() {
+				// Save the original word so Esc can revert it.
+				m.tabSavedWord = m.textInput.Document().CurrentWord()
+				m.tabSavedCursor = m.textInput.cursor
+				m.applyCompletion()
+			}
+		} else {
+			// Subsequent Tab: cycle to next item and apply immediately.
+			m.completion.Next()
+			m.applyCompletion()
 		}
 		return m, nil
 
 	case "shift+tab":
 		if m.completion.IsVisible() {
 			m.completion.Prev()
+			m.applyCompletion()
 		}
 		return m, nil
 
 	case "esc":
-		m.completion.Close()
+		if m.completion.IsVisible() {
+			// Revert the input to what it was before Tab was pressed.
+			m.revertCompletion()
+			m.completion.Close()
+		}
 		return m, nil
 
 	// ---- navigation (context-sensitive: completion OR history) --------------
@@ -199,28 +215,37 @@ func (m Model) submit() (tea.Model, tea.Cmd) {
 	return m, tea.Quit
 }
 
-// acceptCompletion replaces the current word with the selected suggestion.
-func (m *Model) acceptCompletion() {
+// applyCompletion inserts the currently selected suggestion into the input,
+// replacing the word from tabSavedCursor-len(tabSavedWord) to the current
+// cursor position.  The popup stays open so the user can keep cycling.
+func (m *Model) applyCompletion() {
 	sel := m.completion.Selected()
 	if sel == nil {
 		return
 	}
+	selRunes := []rune(sel.Text)
+	wordStart := m.tabSavedCursor - len([]rune(m.tabSavedWord))
+	cur := m.textInput.cursor
+	newVal := make([]rune, 0, wordStart+len(selRunes)+len(m.textInput.value)-cur)
+	newVal = append(newVal, m.textInput.value[:wordStart]...)
+	newVal = append(newVal, selRunes...)
+	newVal = append(newVal, m.textInput.value[cur:]...)
+	m.textInput.value = newVal
+	m.textInput.cursor = wordStart + len(selRunes)
+}
 
-	doc := m.textInput.Document()
-	word := doc.CurrentWord()
-	text := []rune(doc.Text)
-	cursor := doc.CursorPosition
-	wordLen := len([]rune(word))
-
-	// Build the new rune slice: text before word + completion text + text after cursor.
-	newRunes := make([]rune, 0, len(text)-wordLen+len([]rune(sel.Text)))
-	newRunes = append(newRunes, text[:cursor-wordLen]...)
-	newRunes = append(newRunes, []rune(sel.Text)...)
-	newRunes = append(newRunes, text[cursor:]...)
-
-	m.textInput.value = newRunes
-	m.textInput.cursor = cursor - wordLen + len([]rune(sel.Text))
-	m.completion.Close()
+// revertCompletion restores the word that was present before Tab was first
+// pressed.  Called when the user presses Esc.
+func (m *Model) revertCompletion() {
+	wordStart := m.tabSavedCursor - len([]rune(m.tabSavedWord))
+	cur := m.textInput.cursor
+	savedRunes := []rune(m.tabSavedWord)
+	newVal := make([]rune, 0, wordStart+len(savedRunes)+len(m.textInput.value)-cur)
+	newVal = append(newVal, m.textInput.value[:wordStart]...)
+	newVal = append(newVal, savedRunes...)
+	newVal = append(newVal, m.textInput.value[cur:]...)
+	m.textInput.value = newVal
+	m.textInput.cursor = m.tabSavedCursor
 }
 
 // refreshCompletion re-runs the completer and updates the popup.

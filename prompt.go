@@ -12,11 +12,22 @@
 package prompt
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
+
+// ErrExit is a sentinel error that an Executor can return to signal that the
+// prompt loop should exit cleanly.  No error message is printed.
+//
+//	example:
+//	    func executor(input string) error {
+//	        if input == "exit" { return prompt.ErrExit }
+//	        ...
+//	    }
+var ErrExit = errors.New("exit")
 
 // Suggestion is a single completion candidate.
 type Suggestion struct {
@@ -104,6 +115,9 @@ func (p *Prompt) Run() error {
 
 			if p.executor != nil {
 				if execErr := p.executor(input); execErr != nil {
+					if errors.Is(execErr, ErrExit) {
+						return nil
+					}
 					fmt.Fprintln(os.Stderr, "error:", execErr)
 				}
 			}
