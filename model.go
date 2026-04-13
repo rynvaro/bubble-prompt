@@ -171,7 +171,12 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	// ---- rune input ---------------------------------------------------------
 	default:
-		if msg.Type == tea.KeyRunes {
+		// tea.KeySpace is space (0x20); msg.Runes is nil for it, so insert
+		// the space rune explicitly. tea.KeyRunes covers all other printable chars.
+		if msg.Type == tea.KeySpace {
+			m.textInput.InsertRune(' ')
+			m.refreshCompletion()
+		} else if msg.Type == tea.KeyRunes {
 			for _, r := range msg.Runes {
 				m.textInput.InsertRune(r)
 			}
