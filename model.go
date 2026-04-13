@@ -25,9 +25,13 @@ type Model struct {
 	// ---- runtime state ----
 	width int
 
-	// tab completion undo state — saved when the popup first opens
-	tabSavedWord   string
-	tabSavedCursor int
+	// tab completion undo state — saved when Tab is first pressed for a word.
+	// tabActive is false whenever the popup is driven by normal typing;
+	// it becomes true only after the user explicitly presses Tab, ensuring
+	// tabSavedWord/tabSavedCursor are always valid when applyCompletion runs.
+	tabActive       bool
+	tabSavedWord    string
+	tabSavedCursor  int
 
 	// submitted / quitting flags are read by Prompt.Run() after prog.Run().
 	lastInput string
@@ -83,32 +87,42 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	// ---- completion ---------------------------------------------------------
 	case "tab":
 		if !m.completion.IsVisible() {
-			// First Tab: open popup, immediately apply first item.
 			m.refreshCompletion()
-			if m.completion.IsVisible() {
-				// Save the original word so Esc can revert it.
+		}
+		if m.completion.IsVisible() {
+			if m.tabActive {
+				// Already cycling: advance to next item.
+				m.completion.Next()
+			} else {
+				// First Tab for this word (popup may have been opened by
+				// typing). Save original word/cursor so Esc can revert.
+				m.tabActive = true
 				m.tabSavedWord = m.textInput.Document().CurrentWord()
 				m.tabSavedCursor = m.textInput.cursor
-				m.applyCompletion()
 			}
-		} else {
-			// Subsequent Tab: cycle to next item and apply immediately.
-			m.completion.Next()
 			m.applyCompletion()
 		}
 		return m, nil
 
 	case "shift+tab":
 		if m.completion.IsVisible() {
-			m.completion.Prev()
+			if m.tabActive {
+				m.completion.Prev()
+			} else {
+				m.tabActive = true
+				m.tabSavedWord = m.textInput.Document().CurrentWord()
+				m.tabSavedCursor = m.textInput.cursor
+			}
 			m.applyCompletion()
 		}
 		return m, nil
 
 	case "esc":
 		if m.completion.IsVisible() {
-			// Revert the input to what it was before Tab was pressed.
-			m.revertCompletion()
+			if m.tabActive {
+				m.revertCompletion()
+				m.tabActive = false
+			}
 			m.completion.Close()
 		}
 		return m, nil
@@ -249,7 +263,9 @@ func (m *Model) revertCompletion() {
 }
 
 // refreshCompletion re-runs the completer and updates the popup.
+// It also resets tabActive so that the next Tab press saves a fresh baseline.
 func (m *Model) refreshCompletion() {
+	m.tabActive = false
 	if m.completer == nil {
 		m.completion.SetItems(nil)
 		return
