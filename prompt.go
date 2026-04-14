@@ -108,12 +108,12 @@ func (p *Prompt) Run() error {
 		if finalModel.submitted {
 			input := finalModel.lastInput
 
-			// Empty input: echo the prefix line so the scrollback looks
-			// like the user pressed Enter at a real shell prompt, e.g.:
-			//   kubectl>
-			//   kubectl>
+			// Empty input: echo the styled prefix line so the scrollback
+			// looks like the user pressed Enter at a real shell prompt and
+			// the colour matches what was shown in the TUI.
 			if input == "" {
-				fmt.Fprintln(os.Stderr, finalModel.currentPrefix())
+				styled := finalModel.styles.Prefix.Render(finalModel.currentPrefix())
+				fmt.Fprintln(os.Stderr, styled)
 				continue
 			}
 
