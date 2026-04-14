@@ -108,10 +108,12 @@ func (p *Prompt) Run() error {
 		if finalModel.submitted {
 			input := finalModel.lastInput
 
-			// Empty input: print a newline so the terminal scrolls down
-			// naturally (like a real shell), then show a new prompt.
+			// Empty input: echo the prefix line so the scrollback looks
+			// like the user pressed Enter at a real shell prompt, e.g.:
+			//   kubectl>
+			//   kubectl>
 			if input == "" {
-				fmt.Fprintln(os.Stderr)
+				fmt.Fprintln(os.Stderr, finalModel.currentPrefix())
 				continue
 			}
 
