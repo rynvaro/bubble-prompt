@@ -108,8 +108,10 @@ func (p *Prompt) Run() error {
 		if finalModel.submitted {
 			input := finalModel.lastInput
 
-			// Empty input: just show a new prompt.
+			// Empty input: print a newline so the terminal scrolls down
+			// naturally (like a real shell), then show a new prompt.
 			if input == "" {
+				fmt.Fprintln(os.Stderr)
 				continue
 			}
 
