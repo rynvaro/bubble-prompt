@@ -1,19 +1,21 @@
 # bubble-prompt
 
-基于 [Bubble Tea](https://github.com/charmbracelet/bubbletea) 生态的交互式命令行补全框架。
+[中文](README_zh.md)
 
-> 彻底解决 go-prompt 的连续按键乱码问题，同时提供更现代、更优雅的补全 UI。
+An interactive CLI completion framework built on the [Bubble Tea](https://github.com/charmbracelet/bubbletea) ecosystem.
+
+> A modern, elegant drop-in replacement for go-prompt — no more garbled output from rapid keystrokes.
 
 ![demo](docs/demo.gif)
 
-## 特性
+## Features
 
-- **稳定** — MVU 架构，每帧从 Model 完整重建 View，连续按键再快也不会乱码
-- **美观** — lipgloss 圆角弹窗、左右双栏（补全文本 + 描述）、自适应终端宽度
-- **可组合** — 本身就是一个标准 `tea.Model`，可无缝嵌入任何 Bubble Tea 应用
-- **易迁移** — API 设计对标 go-prompt，大多数项目只需修改 import 路径
+- **Reliable** — MVU architecture rebuilds the View from scratch every frame; fast or repeated keystrokes never corrupt output
+- **Beautiful** — lipgloss rounded popup, dual-column layout (completion text + description), adapts to terminal width
+- **Composable** — ships as a standard `tea.Model`, embeds seamlessly into any Bubble Tea application
+- **Easy to migrate** — API mirrors go-prompt; most projects only need to update the import path
 
-## 快速开始
+## Quick Start
 
 ```bash
 go get bubble-prompt
@@ -32,14 +34,14 @@ import (
 func main() {
     p := prompt.New(
         func(input string) error {
-            fmt.Println("执行:", input)
+            fmt.Println("exec:", input)
             return nil
         },
         func(d prompt.Document) []prompt.Suggestion {
             return prompt.FilterHasPrefix([]prompt.Suggestion{
-                {Text: "get",    Description: "获取资源"},
-                {Text: "set",    Description: "设置资源"},
-                {Text: "delete", Description: "删除资源"},
+                {Text: "get",    Description: "fetch a resource"},
+                {Text: "set",    Description: "update a resource"},
+                {Text: "delete", Description: "remove a resource"},
             }, d.CurrentWord(), true)
         },
         prompt.WithPrefix(">>> "),
@@ -50,30 +52,30 @@ func main() {
 }
 ```
 
-## 键位
+## Key Bindings
 
-| 按键 | 动作 |
-|------|------|
-| `Tab` | 触发补全 / 选择下一项 |
-| `Shift+Tab` | 选择上一项 |
-| `↑` / `↓` | 历史导航（补全关闭时）/ 补全列表导航（补全打开时）|
-| `Enter` | 提交输入（补全打开时：接受当前选中项）|
-| `Esc` | 关闭补全弹窗 |
-| `←` / `→` | 移动光标 |
-| `Ctrl+A` / `Home` | 移到行首 |
-| `Ctrl+E` / `End` | 移到行尾 |
-| `Ctrl+W` | 删除光标前的单词 |
-| `Ctrl+U` | 删除到行首 |
-| `Ctrl+K` | 删除到行尾 |
-| `Ctrl+C` / `Ctrl+D` | 退出 |
+| Key | Action |
+|-----|--------|
+| `Tab` | Trigger completion / select next item |
+| `Shift+Tab` | Select previous item |
+| `↑` / `↓` | History navigation (popup closed) / completion navigation (popup open) |
+| `Enter` | Submit input (popup open: accept selected item) |
+| `Esc` | Close completion popup |
+| `←` / `→` | Move cursor |
+| `Ctrl+A` / `Home` | Move to line start |
+| `Ctrl+E` / `End` | Move to line end |
+| `Ctrl+W` | Delete word before cursor |
+| `Ctrl+U` | Delete to line start |
+| `Ctrl+K` | Delete to line end |
+| `Ctrl+C` / `Ctrl+D` | Quit |
 
-## 路线图
+## Roadmap
 
-- [x] v0.1 — 基础 REPL、Tab 补全、历史导航、lipgloss 弹窗
-- [ ] v0.2 — 模糊匹配高亮、弹窗自动上下翻转、分组补全
-- [ ] v0.3 — 异步补全、语法高亮、多行输入
-- [ ] v0.4 — cobra 集成、文件路径补全
+- [x] v0.1 — Basic REPL, Tab completion, history navigation, lipgloss popup
+- [ ] v0.2 — Fuzzy match highlighting, popup auto-flip, grouped completions
+- [ ] v0.3 — Async completion, syntax highlighting, multi-line input
+- [ ] v0.4 — Cobra integration, file path completion
 
-## 许可证
+## License
 
 MIT
