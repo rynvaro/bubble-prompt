@@ -18,7 +18,7 @@
 ## 快速开始
 
 ```bash
-go get bubble-prompt
+go get github.com/rynvaro/bubble-prompt
 ```
 
 ```go
@@ -28,7 +28,7 @@ import (
     "fmt"
     "log"
 
-    prompt "bubble-prompt"
+    prompt "github.com/rynvaro/bubble-prompt"
 )
 
 func main() {
