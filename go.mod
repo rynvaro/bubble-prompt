@@ -1,4 +1,4 @@
-module bubble-prompt
+module github.com/rynvaro/bubble-prompt
 
 go 1.26.1
 

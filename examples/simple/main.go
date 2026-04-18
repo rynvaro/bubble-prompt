@@ -12,7 +12,7 @@ import (
 	"log"
 	"strings"
 
-	prompt "bubble-prompt"
+	prompt "github.com/rynvaro/bubble-prompt"
 )
 
 func main() {
