@@ -20,7 +20,7 @@ func main() {
 		executor,
 		completer,
 		prompt.WithPrefix("kubectl> "),
-		prompt.WithPlaceholder("输入命令，Tab 多级补全，Ctrl+C 退出"),
+		prompt.WithPlaceholder("type a command, Tab for multi-level completion, Ctrl+C to quit"),
 		// popup follows the cursor instead of staying fixed at the prefix
 		prompt.WithCompletionPosition(prompt.CompletionAtCursor),
 	)
@@ -48,21 +48,21 @@ func executor(input string) error {
 // ---- suggestion tables ------------------------------------------------------
 
 var verbs = []prompt.Suggestion{
-	{Text: "get", Description: "显示一个或多个资源"},
-	{Text: "describe", Description: "显示资源的详细信息"},
-	{Text: "delete", Description: "删除资源"},
-	{Text: "apply", Description: "通过文件应用配置"},
-	{Text: "logs", Description: "打印 Pod 中容器的日志"},
-	{Text: "exit", Description: "退出"},
+	{Text: "get", Description: "display one or more resources"},
+	{Text: "describe", Description: "show detailed info of a resource"},
+	{Text: "delete", Description: "delete a resource"},
+	{Text: "apply", Description: "apply configuration from a file"},
+	{Text: "logs", Description: "print logs of a container in a pod"},
+	{Text: "exit", Description: "exit the prompt"},
 }
 
 var resources = []prompt.Suggestion{
-	{Text: "pod", Display: "pod", Description: "运行中的容器组"},
-	{Text: "deployment", Display: "deployment", Description: "声明式应用部署"},
-	{Text: "service", Display: "service", Description: "网络服务暴露"},
-	{Text: "configmap", Display: "configmap", Description: "配置数据"},
-	{Text: "node", Display: "node", Description: "集群节点"},
-	{Text: "namespace", Display: "namespace", Description: "资源隔离空间"},
+	{Text: "pod", Display: "pod", Description: "running container group"},
+	{Text: "deployment", Display: "deployment", Description: "declarative app deployment"},
+	{Text: "service", Display: "service", Description: "network service exposure"},
+	{Text: "configmap", Display: "configmap", Description: "configuration data"},
+	{Text: "node", Display: "node", Description: "cluster node"},
+	{Text: "namespace", Display: "namespace", Description: "resource isolation scope"},
 }
 
 // fakeNames pretends to be the list of live resources for each type.
@@ -98,35 +98,35 @@ var fakeNames = map[string][]prompt.Suggestion{
 // flags available after a resource name for each verb.
 var verbFlags = map[string][]prompt.Suggestion{
 	"get": {
-		{Text: "--namespace", Display: "--namespace", Description: "-n  指定命名空间"},
-		{Text: "--output", Display: "--output", Description: "-o  输出格式 (json|yaml|wide)"},
-		{Text: "--selector", Display: "--selector", Description: "-l  标签选择器"},
-		{Text: "--all-namespaces", Display: "--all-namespaces", Description: "-A  所有命名空间"},
-		{Text: "--watch", Display: "--watch", Description: "-w  持续监听变化"},
-		{Text: "--show-labels", Display: "--show-labels", Description: "    显示所有标签"},
+		{Text: "--namespace", Display: "--namespace", Description: "-n  specify namespace"},
+		{Text: "--output", Display: "--output", Description: "-o  output format (json|yaml|wide)"},
+		{Text: "--selector", Display: "--selector", Description: "-l  label selector"},
+		{Text: "--all-namespaces", Display: "--all-namespaces", Description: "-A  all namespaces"},
+		{Text: "--watch", Display: "--watch", Description: "-w  watch for changes"},
+		{Text: "--show-labels", Display: "--show-labels", Description: "    show all labels"},
 	},
 	"describe": {
-		{Text: "--namespace", Display: "--namespace", Description: "-n  指定命名空间"},
-		{Text: "--selector", Display: "--selector", Description: "-l  标签选择器"},
+		{Text: "--namespace", Display: "--namespace", Description: "-n  specify namespace"},
+		{Text: "--selector", Display: "--selector", Description: "-l  label selector"},
 	},
 	"delete": {
-		{Text: "--namespace", Display: "--namespace", Description: "-n  指定命名空间"},
-		{Text: "--force", Display: "--force", Description: "    强制删除"},
-		{Text: "--grace-period", Display: "--grace-period", Description: "    优雅退出等待秒数"},
-		{Text: "--selector", Display: "--selector", Description: "-l  标签选择器"},
+		{Text: "--namespace", Display: "--namespace", Description: "-n  specify namespace"},
+		{Text: "--force", Display: "--force", Description: "    force delete"},
+		{Text: "--grace-period", Display: "--grace-period", Description: "    graceful exit wait seconds"},
+		{Text: "--selector", Display: "--selector", Description: "-l  label selector"},
 	},
 	"logs": {
-		{Text: "--namespace", Display: "--namespace", Description: "-n  指定命名空间"},
-		{Text: "--follow", Display: "--follow", Description: "-f  持续输出"},
-		{Text: "--tail", Display: "--tail", Description: "    输出最后 N 行"},
-		{Text: "--previous", Display: "--previous", Description: "-p  上一个容器实例的日志"},
-		{Text: "--container", Display: "--container", Description: "-c  指定容器名"},
+		{Text: "--namespace", Display: "--namespace", Description: "-n  specify namespace"},
+		{Text: "--follow", Display: "--follow", Description: "-f  stream logs"},
+		{Text: "--tail", Display: "--tail", Description: "    last N lines"},
+		{Text: "--previous", Display: "--previous", Description: "-p  previous container instance"},
+		{Text: "--container", Display: "--container", Description: "-c  specify container name"},
 	},
 	"apply": {
-		{Text: "--filename", Display: "--filename", Description: "-f  文件路径或 URL"},
-		{Text: "--namespace", Display: "--namespace", Description: "-n  指定命名空间"},
-		{Text: "--dry-run", Display: "--dry-run", Description: "    预演，不实际变更"},
-		{Text: "--recursive", Display: "--recursive", Description: "-R  递归处理目录"},
+		{Text: "--filename", Display: "--filename", Description: "-f  file path or URL"},
+		{Text: "--namespace", Display: "--namespace", Description: "-n  specify namespace"},
+		{Text: "--dry-run", Display: "--dry-run", Description: "    dry run, no actual changes"},
+		{Text: "--recursive", Display: "--recursive", Description: "-R  process directories recursively"},
 	},
 }
 
